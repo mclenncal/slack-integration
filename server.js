@@ -14,7 +14,10 @@ function incomingSlackPayload(payload, authorisation) {
   return {
       authorized: authorized(payload, authorisation),
       valid: validate(payload),
-      token: payload.token
+      token: payload.token,
+      user: payload.user_id,
+      text: payload.text,
+      id: trigger_id
   }
 
   function validate(payload) {
@@ -38,17 +41,17 @@ function incomingSlackPayload(payload, authorisation) {
   }
 }
 
-function outgoingSlackPayload(text, response_url) {
+function outgoingSlackPayload(id, text, user, text) {
   return {
       text: text,
-      response_url: response_url,
-      response_type: "in_channel",
+      trigger_id: id,
+      response_type: "ephemeral",
       blocks: [
         {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "<user> needs a code review:\n*<http://confluence/|confluence link>*"
+            text: user +" needs a code review:\n*<"+text+"|confluence link>*"
           }
         },
         {
@@ -62,7 +65,7 @@ function outgoingSlackPayload(text, response_url) {
                 text: "First Review"
               },
               style: "primary",
-              value: "first-approve:id"
+              value: "first-approve:"+id
             },
             {
               type: "button",
@@ -72,7 +75,7 @@ function outgoingSlackPayload(text, response_url) {
                 text: "Second Review"
               },
               style: "primary",
-              value: "second-approve:id"
+              value: "second-approve:"+id
             }
           ]
         }
