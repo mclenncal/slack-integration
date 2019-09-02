@@ -51,7 +51,7 @@ function outgoingSlackPayload(id, text, user) {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: "<@here> @here : " + user + " needs a code review:\n*<"+text+"|confluence link>*"
+            text: "@here - <@" + user + "> needs a code review: *<"+text+"|confluence link>*"
           }
         },
         {
@@ -135,7 +135,7 @@ app.post('/slack/signup', function(req, res) {
   console.log(auth.claims);
 
   file.writeFileSync('./authorization/'+user+'.json', JSON.stringify(auth));
-  
+
   res.status(200).json(outgoingSlackPayload(command.id, command.text, command.user));
 });
 
