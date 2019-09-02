@@ -38,9 +38,11 @@ function incomingSlackPayload(payload, authorisation) {
   }
 }
 
-function outgoingSlackPayload(response_url) {
+function outgoingSlackPayload(text, response_url) {
   return {
-      response_url: response_url
+      text: text,
+      response_url: response_url,
+      response_type: "in_channel"
   };
 
 }
@@ -97,7 +99,7 @@ app.post('/slack/signup', function(req, res) {
 
   file.writeFileSync('./authorization/'+user+'.json', JSON.stringify(auth));
 
-  res.status(200).json({ success: true });
+  res.status(200).json(outgoingSlackPayload(JSON.stringify(auth)));
 });
 
 // error handling
