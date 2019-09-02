@@ -1,17 +1,16 @@
 {
-  "name": "test",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "start": "node ./bin/www"
-  },
+  "name": "slack-integration",
+  "version": "0.0.1",
+  "description": "Slack Integration Test",
+  "main": "server.js",
   "dependencies": {
-    "cookie-parser": "~1.4.4",
-    "debug": "~2.6.9",
-    "express": "~4.16.1",
-    "fs": "0.0.1-security",
-    "http-errors": "~1.6.3",
-    "morgan": "~1.9.1",
-    "pug": "2.0.0-beta11"
+    "express": "^4.13.4"
+  },
+  "engine": {
+    "node": "*",
+    "npm": "*"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
