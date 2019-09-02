@@ -42,7 +42,41 @@ function outgoingSlackPayload(text, response_url) {
   return {
       text: text,
       response_url: response_url,
-      response_type: "in_channel"
+      response_type: "in_channel",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "<user> needs a code review:\n*<http://confluence/|confluence link>*"
+          }
+        },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                emoji: true,
+                text: "First Review"
+              },
+              style: "primary",
+              value: "first-approve:id"
+            },
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                emoji: true,
+                text: "Second Review"
+              },
+              style: "primary",
+              value: "second-approve:id"
+            }
+          ]
+        }
+      ]
   };
 
 }
