@@ -45,7 +45,7 @@ router.post('/', function(req, res, next) {
 
     var auth = JSON.parse(file.readFileSync('./authorization/'+user+'.json'));
 
-    var command = models.slashCommandPayload(data, auth);
+    var command = slashCommandPayload(data, auth);
 
     console.log(command);
 
@@ -68,7 +68,7 @@ router.post('/signup', function(req, res, next) {
 
     console.log('Request received from ' + user);
 
-    var command = models.slashCommandPayload(data, null);
+    var command = slashCommandPayload(data, null);
 
     console.log(command);
 
