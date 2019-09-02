@@ -51,7 +51,7 @@ function outgoingSlackPayload(id, text, user, text) {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: user +" needs a code review:\n*<"+text+"|confluence link>*"
+            text: "<@here> @here : " + user + " needs a code review:\n*<"+text+"|confluence link>*"
           }
         },
         {
