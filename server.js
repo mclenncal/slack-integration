@@ -41,7 +41,7 @@ function incomingSlackPayload(payload, authorisation) {
   }
 }
 
-function outgoingSlackPayload(id, text, user, text) {
+function outgoingSlackPayload(id, text, user) {
   return {
       text: text,
       trigger_id: id,
@@ -135,8 +135,8 @@ app.post('/slack/signup', function(req, res) {
   console.log(auth.claims);
 
   file.writeFileSync('./authorization/'+user+'.json', JSON.stringify(auth));
-
-  res.status(200).json(outgoingSlackPayload(JSON.stringify(auth)));
+  
+  res.status(200).json(outgoingSlackPayload(command.id, command.text, command.user));
 });
 
 // error handling
