@@ -17,7 +17,7 @@ function incomingSlackPayload(payload, authorisation) {
       token: payload.token,
       user: payload.user_id,
       text: payload.text,
-      id: trigger_id
+      id: payload.trigger_id
   }
 
   function validate(payload) {
