@@ -13,10 +13,11 @@ app.get('/', function(_, res) {
 app.post('/action', function(req, res) {
     var data = JSON.parse(req.body.payload);
     var user = data.user.id;
+    var team = data.team.id;
 
     console.log('POST /action request from '+user+' : '+JSON.stringify(data));
   
-    var auth = JSON.parse(file.readFileSync('./authorization/'+user+'.json'));
+    var auth = JSON.parse(file.readFileSync('./authorization/'+team+'.json'));
   
     var command = models.incomingSlackPayload(data, auth);
     
