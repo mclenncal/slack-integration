@@ -13,6 +13,8 @@ app.get('/', function(_, res) {
 app.post('/action', function(req, res) {
     var data = req.body;
     var user = data.team_domain;
+
+    console.log('POST /action request from '+user+' : '+JSON.stringify(data));
   
     var auth = JSON.parse(file.readFileSync('./authorization/'+user+'.json'));
   
