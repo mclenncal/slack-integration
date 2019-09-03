@@ -11,8 +11,8 @@ app.get('/', function(_, res) {
 });
 
 app.post('/action', function(req, res) {
-    var data = req.body;
-    var user = data.team_domain;
+    var data = JSON.parse(req.body.payload);
+    var user = data.user.id;
 
     console.log('POST /action request from '+user+' : '+JSON.stringify(data));
   
@@ -30,7 +30,7 @@ app.post('/action', function(req, res) {
     var pload = command;
 
     var step = [ action ];
-    var reviewer = [ command.user ];
+    var reviewer = [ user ];
 
     if(wflow !== null) {
         if(wflow.step) {
@@ -38,13 +38,13 @@ app.post('/action', function(req, res) {
             step.push(action);
         }
         if(wflow.reviewer) {
-            if(wflow.reviewer.indexOf(command.user) > -1) {
+            if(wflow.reviewer.indexOf(user) > -1) {
                 res.status(200).json(models.outgoingSlackPayload(command.id, 'You\'ve already agreed to review, but I appreciate the enthusiasm!', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
                 return;
             }
 
             reviewer = wflow.reviewer;
-            reviewer.push(command.user);
+            reviewer.push(user);
         }
     }
 
@@ -59,13 +59,13 @@ app.post('/action', function(req, res) {
         pload.reviewer = reviewer;
 
         workflow.save(command.id, pload);
-        res.status(200).json(models.outgoingSlackPayload(command.id, '<@"' + command.user + '"> has agreed to code review.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+        res.status(200).json(models.outgoingSlackPayload(command.id, '<@"' + user + '"> has agreed to code review.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
     } else {
         wflow.step = step;
         wflow.step = reviewer;
 
         workflow.save(command.id, wflow);
-        res.status(200).json(models.outgoingSlackPayload(command.id, '<@"' + command.user + '"> has agreed to code review.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+        res.status(200).json(models.outgoingSlackPayload(command.id, '<@"' + user + '"> has agreed to code review.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
     }
 })
 
