@@ -1,4 +1,5 @@
 var fs = require('fs');
+var log = require('./log.js');
 
 function path(p) {
     var basePath = './';
@@ -10,7 +11,15 @@ function path(p) {
 }
 
 function exists(file) {
-    return fs.existsSync(path(file));
+    var fileExists = fs.existsSync(path(file));
+
+    if(fileExists) {
+        log.important('File requested and found (file: '+path(file)+').');
+    } else {
+        log.important('File not found (file: '+path(file)+').');
+    }
+
+    return fileExists;
 }
 
 function write(file, data) {

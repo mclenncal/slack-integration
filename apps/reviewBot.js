@@ -16,8 +16,6 @@ app.post('/action', function(req, res) {
     var data = JSON.parse(req.body.payload);
     var user = data.user.id;
     var team = data.team.id;
-
-    console.log(' : '+JSON.stringify(data));
   
     var auth = JSON.parse(file.read('authorization/'+team+'.json'));
   
@@ -127,8 +125,6 @@ app.post('/authorize', function(req, res) {
     var user = data.team_domain;
 
     var command = models.incomingSlackPayload(data, null);
-
-    console.log(command);
 
     var auth = { 
         token: command.token,
