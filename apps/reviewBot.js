@@ -3,10 +3,7 @@ var express = require('express'),
     axios = require('axios'), 
     models = require('../shared/models/slackModels.js'),
     file = require('../shared/util/file.js'),
-    workflow = require('../shared/util/workflow.js'),
     log = require('../shared/util/log.js');
-
-/* GET home page. */
 
 app.get('/', function(_, res) {
     res.status(200).json({ reviewBot: 'running|healthy' });
@@ -30,7 +27,7 @@ function next(payload) {
 
     if(elements.length < 3) {
         blocks[1].elements.push({
-            type: "mrkdwn",
+            type: 'mrkdwn',
             text: user
         });
     }
@@ -63,7 +60,7 @@ app.post('/action', function(req, res) {
     var response = command.payload.message;
     response.blocks = next(command.payload);
 
-    axios.post(command.payload.response_url, response);
+    axios.post(command.payload.response_url, response).then(function(e) { });
     log.important('Responding @ '+command.payload.response_url+' (id: '+command.id+', response: '+JSON.stringify(response, null, 4)+')');
 
     res.status(200);
@@ -87,34 +84,34 @@ app.post('/', function(req, res) {
 
     res.status(200).json(models.outgoingSlackPayload(command.id, ' ', [
         {
-            type: "section",
+            type: 'section',
             text: {
-                type: "mrkdwn",
-                text: "@here - <@" + command.user + "> is requesting a code review: *<"+command.text+"|confluence link>*"
+                type: 'mrkdwn',
+                text: '@here - <@' + command.user + '> is requesting a code review: *<'+command.text+'|confluence link>*'
             },
             accessory: {
-                type: "button",
+                type: 'button',
                 text: {
-                    type: "plain_text",
+                    type: 'plain_text',
                     emoji: true,
-                    text: "Code Review"
+                    text: 'Review'
                 },
-                style: "primary",
-                value: "code-review"
+                style: 'primary',
+                value: 'code-review'
             }
         },
         {
-            type: "context",
+            type: 'context',
             elements: [{
-                "type": "mrkdwn",
-                "text": "Reviewers: "
+                'type': 'mrkdwn',
+                'text': 'Reviewers: '
             }]
         }
     ]));
 });
   
 /*
-* Grant permissions to new users
+* Grant permissions to new domains
 */
 app.post('/authorize', function(req, res) {
     log.json(req.body, 'POST /authorize');
@@ -132,7 +129,17 @@ app.post('/authorize', function(req, res) {
 
     log.important('Domain authorised (domain: '+user+', user: '+command.payload.user_name+')');
 
-    res.status(200).json(models.outgoingSlackPayload(command.id, 'authorized', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+    res.status(200).json(models.outgoingSlackPayload(command.id, 'Authorized', [
+        {
+            type: "context",
+            elements: [
+                {
+                    type: "mrkdwn",
+                    text: "Capabilities: "+JSON.stringify(auth.claims)
+                }
+            ]
+        }
+    ]));
 });
 
 module.exports = app;
