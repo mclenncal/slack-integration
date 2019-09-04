@@ -27,13 +27,12 @@ function incomingSlackPayload(payload, authorisation) {
     }
 }
   
-function outgoingSlackPayload(id, text, blocks, footer) {
+function outgoingSlackPayload(id, text, blocks) {
     return {
         text: text,
         trigger_id: id,
         response_type: "in_channel",
-        blocks: blocks,
-        footer: footer
+        blocks: blocks
     };
 }
 

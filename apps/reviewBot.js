@@ -1,8 +1,9 @@
 var express = require('express'),
     app = express.Router(), 
     models = require('../shared/models/slackModels.js'),
-    file = require('fs'),
-    workflow = require('../shared/models/workflow.js');
+    file = require('../shared/util/file.js'),
+    workflow = require('../shared/util/workflow.js'),
+    log = require('../shared/util/log.js');
 
 /* GET home page. */
 
@@ -11,18 +12,22 @@ app.get('/', function(_, res) {
 });
 
 app.post('/action', function(req, res) {
+    log.json(req.body, 'POST /action');
     var data = JSON.parse(req.body.payload);
     var user = data.user.id;
     var team = data.team.id;
 
-    console.log('POST /action request from '+user+' : '+JSON.stringify(data));
+    console.log(' : '+JSON.stringify(data));
   
-    var auth = JSON.parse(file.readFileSync('./authorization/'+team+'.json'));
+    var auth = JSON.parse(file.read('authorization/'+team+'.json'));
   
     var command = models.incomingSlackPayload(data, auth);
+
+    log.important('request from '+user+' (action: '+command.payload.actions[0].value+', authorized: '+command.authorized+')');
     
     if(!command.authorized) {
-        res.status(401).json({ claims: [] });
+        res.status(401).json();
+        return;
     }
 
     var action = command.payload.actions[0].value;
@@ -49,51 +54,57 @@ app.post('/action', function(req, res) {
         }
     }
 
-
     if(reviewer.length > 2) {
-        res.status(200).json(models.outgoingSlackPayload(command.id, 'This release already has enough code reviewers.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+        res.status(200).json();
         return;
     }
 
     if(wflow == null) {
+        log.important('New workflow created by '+user+' (id: '+command.id+')');
         pload.step = step;
         pload.reviewer = reviewer;
 
         workflow.save(command.id, pload);
-        res.status(200).json(models.outgoingSlackPayload(command.id, '<@"' + user + '"> has agreed to code review.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
     } else {
+        log.important('Workflow updated by '+user+' (id: '+command.id+')');
         wflow.step = step;
-        wflow.step = reviewer;
+        wflow.reviewer = reviewer;
 
         workflow.save(command.id, wflow);
-        res.status(200).json(models.outgoingSlackPayload(command.id, '<@"' + user + '"> has agreed to code review.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
     }
+
+    axios.post(command.payload.response_url, models.outgoingSlackPayload(command.id, 'This release already has enough code reviewers.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+
+    res.status(200);
 })
 
 app.post('/', function(req, res) {
+    log.json(req.body, 'POST /');
     var data = req.body;
     var user = data.team_domain;
   
-    var auth = JSON.parse(file.readFileSync('./authorization/'+user+'.json'));
+    var auth = JSON.parse(file.read('authorization/'+user+'.json'));
   
     var command = models.incomingSlackPayload(data, auth);
   
     if(!command.authorized) {
         res.status(401).json({ claims: [] });
+        return;
     }
-    else {
-        res.status(200).json(models.outgoingSlackPayload(command.id, command.text, [
-            {
+
+    log.important('Code review requested by '+user+' (id: '+command.id+')');
+
+    res.status(200).json(models.outgoingSlackPayload(command.id, command.text, [
+        {
             type: "section",
             text: {
                 type: "mrkdwn",
                 text: "@here - <@" + command.user + "> is requesting a code review: *<"+command.text+"|confluence link>*"
             }
-            },
-            {
+        },
+        {
             type: "actions",
-            elements: [
-                {
+            elements: [{
                 type: "button",
                 text: {
                     type: "plain_text",
@@ -102,17 +113,16 @@ app.post('/', function(req, res) {
                 },
                 style: "primary",
                 value: "code-review"
-                }
-            ]
             }
-        ], [], '<https://api.slack.com/docs/triggers|'+command.id+'>')); 
-    }
+        ]}
+    ], [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
 });
   
 /*
 * Grant permissions to new users
 */
 app.post('/authorize', function(req, res) {
+    log.json(req.body, 'POST /authorize');
     var data = req.body;
     var user = data.team_domain;
 
@@ -125,7 +135,9 @@ app.post('/authorize', function(req, res) {
         claims: ['/authorize', '/cr', '/review']
     };
 
-    file.writeFileSync('./authorization/'+user+'.json', JSON.stringify(auth));
+    file.write('authorization/'+user+'.json', JSON.stringify(auth));
+
+    log.important('Domain authorised (domain: '+user+')');
 
     res.status(200).json(models.outgoingSlackPayload(command.id, 'authorized', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
 });
