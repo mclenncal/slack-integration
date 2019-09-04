@@ -15,16 +15,14 @@ app.get('/', function(_, res) {
 function next(payload) {
     var blocks = payload.message.blocks;
 
-    var fields = blocks[1].fields;
-    var user = payload.user.username;
+    var elements = blocks[1].elements;
+    var user = '<@'+payload.user.username+'>';
 
-    if(fields[1].text === ' ') {
-        if(fields[0].text === ' ') {
-            blocks[1].fields[0].text = user;
-        } else {
-            blocks[1].fields[1].text = user;
-            blocks[0].accessory = null;
-        }
+    if(elements.length < 3) {
+        blocks[1].elements.push({
+            type: "mrkdwn",
+            text: user
+        });
     }
 
     return blocks;
@@ -91,19 +89,11 @@ app.post('/', function(req, res) {
             }
         },
         {
-            type: "section",
-            fields: [
-                {
-                    type: "plain_text",
-                    text: " ",
-                    emoji: true
-                },
-                {
-                    type: "plain_text",
-                    text: " ",
-                    emoji: true
-                }
-            ]
+            type: "context",
+            elements: [{
+                "type": "mrkdwn",
+                "text": " "
+            }]
         }
     ]));
 });
