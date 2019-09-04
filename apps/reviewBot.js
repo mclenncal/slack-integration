@@ -1,5 +1,6 @@
 var express = require('express'),
-    app = express.Router(), 
+    app = express.Router(),
+    axios = require('axios'), 
     models = require('../shared/models/slackModels.js'),
     file = require('../shared/util/file.js'),
     workflow = require('../shared/util/workflow.js'),
@@ -15,7 +16,7 @@ app.post('/action', function(req, res) {
     log.json(req.body, 'POST /action');
     var data = JSON.parse(req.body.payload);
     var user = data.user.id;
-    var team = data.team.team_domain;
+    var team = data.team.domain;
   
     var auth = JSON.parse(file.read('authorization/'+team+'.json'));
   
@@ -129,7 +130,7 @@ app.post('/authorize', function(req, res) {
 
     var auth = { 
         token: command.token,
-        claims: ['/authorize', '/cr', '/review']
+        claims: ['/authorize', '/cr', '/review', 'block_actions']
     };
 
     file.write('authorization/'+user+'.json', JSON.stringify(auth));

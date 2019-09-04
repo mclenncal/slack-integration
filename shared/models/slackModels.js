@@ -23,7 +23,8 @@ function incomingSlackPayload(payload, authorisation) {
           return false;
     
         return payload.token === authorization.token
-            && authorization.claims.indexOf(payload.command) > -1;
+            && (authorization.claims.indexOf(payload.command) > -1 
+            || (payload.type && authorization.claims.indexOf(payload.type) > -1));
     }
 }
   
