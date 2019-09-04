@@ -44,7 +44,7 @@ app.post('/action', function(req, res) {
         }
         if(wflow.reviewer) {
             if(wflow.reviewer.indexOf(user) > -1) {
-                res.status(200).json(models.outgoingSlackPayload(command.id, 'You\'ve already agreed to review, but I appreciate the enthusiasm!', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+                res.status(500);
                 return;
             }
 
@@ -71,7 +71,63 @@ app.post('/action', function(req, res) {
 
         workflow.save(command.id, wflow);
     }
-    var response = models.outgoingSlackPayload(command.id, 'This release already has enough code reviewers.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>');
+    
+    var firstReviewer = '',
+        secondReviewer = '';
+    if(reviewer[0]) firstReviewer = '<@'+reviewer[0]+'>';
+    if(reviewer[1]) secondReviewer = '<@'+reviewer[1]+'>';
+
+    var workflowBlock = [
+        {
+            type: "plain_text",
+            text: "First Reviewer: "+firstReviewer,
+            emoji: true
+        },
+        {
+            type: "plain_text",
+            text: "Second Reviewer: "+secondReviewer,
+            emoji: true
+        }
+    ];
+
+    var element = [{
+        type: "button",
+        text: {
+            type: "plain_text",
+            emoji: true,
+            text: "Code Review"
+        },
+        style: "primary",
+        value: "code-review"
+    }];
+
+    if(secondReviewer)
+        element = null;
+
+    var response = models.outgoingSlackPayload(command.id, 'This release already has enough code reviewers.', [
+        {
+            type: "section",
+            fields: workflowBlock,
+            text: {
+                type: "mrkdwn",
+                text: "@here - <@" + command.user + "> is requesting a code review: *<"+command.text+"|confluence link>*"
+            }
+        },
+        {
+            type: "actions",
+            elements: element
+        },
+        {
+            type: "context",
+            elements: [
+                {
+                    type: "mrkdwn",
+                    text: '<https://api.slack.com/docs/triggers|'+command.id+'>'
+                }
+            ]
+        }
+    ]);
+    
     axios.post(command.payload.response_url, response);
     log.important('Responding @ '+command.payload.response_url+' (id: '+command.id+', response: '+JSON.stringify(response, null, 4)+')');
 
