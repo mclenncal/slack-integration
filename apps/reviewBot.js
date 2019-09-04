@@ -16,7 +16,7 @@ function next(payload) {
     var blocks = payload.message.blocks;
 
     var elements = blocks[1].elements;
-    var user = '<@'+payload.user.username+'>';
+    var user = '<@'+payload.user.id+'>';
 
     var duplicate = false;
 
@@ -33,6 +33,11 @@ function next(payload) {
             type: "mrkdwn",
             text: user
         });
+    }
+
+    if(elements.length == 3) {
+        log.important('Code review complete (original request: ' + payload.message.text + ')');
+        blocks[0].accessory = null;
     }
 
     return blocks;
