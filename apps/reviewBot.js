@@ -12,6 +12,24 @@ app.get('/', function(_, res) {
     res.status(200).json({ reviewBot: 'running|healthy' });
 });
 
+function next(payload) {
+    var blocks = payload.message.blocks;
+
+    var fields = blocks[1].fields;
+    var user = payload.user.username;
+
+    if(fields[1].text === ' ') {
+        if(fields[0].text === ' ') {
+            blocks[1].fields[0].text = user;
+        } else {
+            blocks[1].fields[1].text = user;
+            blocks[0].accessory = null;
+        }
+    }
+
+    return blocks;
+}
+
 app.post('/action', function(req, res) {
     log.json(req.body, 'POST /action');
     var data = JSON.parse(req.body.payload);
@@ -29,105 +47,9 @@ app.post('/action', function(req, res) {
         return;
     }
 
-    var action = command.payload.actions[0].value;
+    var response = command.payload.message;
+    response.blocks = next(command.payload);
 
-    var wflow = workflow.retrieve(command.id);
-    var pload = command;
-
-    var step = [ action ];
-    var reviewer = [ user ];
-
-    if(wflow !== null) {
-        if(wflow.step) {
-            step = wflow.step;
-            step.push(action);
-        }
-        if(wflow.reviewer) {
-            if(wflow.reviewer.indexOf(user) > -1) {
-                res.status(500);
-                return;
-            }
-
-            reviewer = wflow.reviewer;
-            reviewer.push(user);
-        }
-    }
-
-    if(reviewer.length > 2) {
-        res.status(200).json();
-        return;
-    }
-
-    if(wflow == null) {
-        log.important('New workflow created by '+command.payload.user.user_name+' (id: '+command.id+')');
-        pload.step = step;
-        pload.reviewer = reviewer;
-
-        workflow.save(command.id, pload);
-    } else {
-        log.important('Workflow updated by '+user+' (id: '+command.id+')');
-        wflow.step = step;
-        wflow.reviewer = reviewer;
-
-        workflow.save(command.id, wflow);
-    }
-    
-    var firstReviewer = '',
-        secondReviewer = '';
-    if(reviewer[0]) firstReviewer = '<@'+reviewer[0]+'>';
-    if(reviewer[1]) secondReviewer = '<@'+reviewer[1]+'>';
-
-    var workflowBlock = [
-        {
-            type: "plain_text",
-            text: "First Reviewer: "+firstReviewer,
-            emoji: true
-        },
-        {
-            type: "plain_text",
-            text: "Second Reviewer: "+secondReviewer,
-            emoji: true
-        }
-    ];
-
-    var element = [{
-        type: "button",
-        text: {
-            type: "plain_text",
-            emoji: true,
-            text: "Code Review"
-        },
-        style: "primary",
-        value: "code-review"
-    }];
-
-    if(secondReviewer)
-        element = null;
-
-    var response = models.outgoingSlackPayload(command.id, 'This release already has enough code reviewers.', [
-        {
-            type: "section",
-            fields: workflowBlock,
-            text: {
-                type: "mrkdwn",
-                text: "@here - <@" + command.user + "> is requesting a code review: *<"+command.text+"|confluence link>*"
-            }
-        },
-        {
-            type: "actions",
-            elements: element
-        },
-        {
-            type: "context",
-            elements: [
-                {
-                    type: "mrkdwn",
-                    text: '<https://api.slack.com/docs/triggers|'+command.id+'>'
-                }
-            ]
-        }
-    ]);
-    
     axios.post(command.payload.response_url, response);
     log.important('Responding @ '+command.payload.response_url+' (id: '+command.id+', response: '+JSON.stringify(response, null, 4)+')');
 
@@ -150,17 +72,14 @@ app.post('/', function(req, res) {
 
     log.important('Code review requested by <@'+command.user+'> (id: '+command.id+', username: '+command.user_name+')');
 
-    res.status(200).json(models.outgoingSlackPayload(command.id, command.text, [
+    res.status(200).json(models.outgoingSlackPayload(command.id, ' ', [
         {
             type: "section",
             text: {
                 type: "mrkdwn",
                 text: "@here - <@" + command.user + "> is requesting a code review: *<"+command.text+"|confluence link>*"
-            }
-        },
-        {
-            type: "actions",
-            elements: [{
+            },
+            accessory: {
                 type: "button",
                 text: {
                     type: "plain_text",
@@ -170,8 +89,23 @@ app.post('/', function(req, res) {
                 style: "primary",
                 value: "code-review"
             }
-        ]}
-    ], [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+        },
+        {
+            type: "section",
+            fields: [
+                {
+                    type: "plain_text",
+                    text: " ",
+                    emoji: true
+                },
+                {
+                    type: "plain_text",
+                    text: " ",
+                    emoji: true
+                }
+            ]
+        }
+    ]));
 });
   
 /*
