@@ -25,10 +25,8 @@ function next(payload) {
             duplicate = true;
     });
 
-    /* TODO uncomment
     if(duplicate)
         return;
-    */
 
     if(elements.length < 3) {
         blocks[1].elements.push({
@@ -104,7 +102,7 @@ app.post('/', function(req, res) {
             type: "context",
             elements: [{
                 "type": "mrkdwn",
-                "text": " "
+                "text": "Reviewers: "
             }]
         }
     ]));
