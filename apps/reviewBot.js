@@ -18,6 +18,18 @@ function next(payload) {
     var elements = blocks[1].elements;
     var user = '<@'+payload.user.username+'>';
 
+    var duplicate = false;
+
+    elements.map(function(e) {
+        if(e.text === user)
+            duplicate = true;
+    });
+
+    /* TODO uncomment
+    if(duplicate)
+        return;
+    */
+
     if(elements.length < 3) {
         blocks[1].elements.push({
             type: "mrkdwn",
