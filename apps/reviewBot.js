@@ -15,7 +15,7 @@ app.post('/action', function(req, res) {
     log.json(req.body, 'POST /action');
     var data = JSON.parse(req.body.payload);
     var user = data.user.id;
-    var team = data.team.id;
+    var team = data.team.team_domain;
   
     var auth = JSON.parse(file.read('authorization/'+team+'.json'));
   
@@ -58,7 +58,7 @@ app.post('/action', function(req, res) {
     }
 
     if(wflow == null) {
-        log.important('New workflow created by '+user+' (id: '+command.id+')');
+        log.important('New workflow created by '+command.payload.user.user_name+' (id: '+command.id+')');
         pload.step = step;
         pload.reviewer = reviewer;
 
@@ -70,8 +70,9 @@ app.post('/action', function(req, res) {
 
         workflow.save(command.id, wflow);
     }
-
-    axios.post(command.payload.response_url, models.outgoingSlackPayload(command.id, 'This release already has enough code reviewers.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
+    var response = models.outgoingSlackPayload(command.id, 'This release already has enough code reviewers.', [], '<https://api.slack.com/docs/triggers|'+command.id+'>');
+    axios.post(command.payload.response_url, response);
+    log.important('Responding @ '+command.payload.response_url+' (id: '+command.id+', response: '+JSON.stringify(response, null, 4)+')');
 
     res.status(200);
 })
@@ -90,7 +91,7 @@ app.post('/', function(req, res) {
         return;
     }
 
-    log.important('Code review requested by '+user+' (id: '+command.id+')');
+    log.important('Code review requested by <@'+command.user+'> (id: '+command.id+', username: '+command.user_name+')');
 
     res.status(200).json(models.outgoingSlackPayload(command.id, command.text, [
         {
@@ -133,7 +134,7 @@ app.post('/authorize', function(req, res) {
 
     file.write('authorization/'+user+'.json', JSON.stringify(auth));
 
-    log.important('Domain authorised (domain: '+user+')');
+    log.important('Domain authorised (domain: '+user+', user: '+command.payload.user_name+')');
 
     res.status(200).json(models.outgoingSlackPayload(command.id, 'authorized', [], '<https://api.slack.com/docs/triggers|'+command.id+'>'));
 });

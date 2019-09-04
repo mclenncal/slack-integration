@@ -24,6 +24,7 @@ function exists(file) {
 
 function write(file, data) {
     fs.writeFileSync(path(file), data);
+    log.important('Writing file (file: '+path(file)+').');
 }
 
 function read(file) {
