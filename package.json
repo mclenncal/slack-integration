@@ -4,7 +4,7 @@
   "description": "Slack Integration Test",
   "main": "app.js",
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "express": "^4.13.4"
   },
   "engine": {
